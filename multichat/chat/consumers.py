@@ -3,6 +3,7 @@ from channels import Channel
 from channels.auth import channel_session_user_from_http, channel_session_user
 from .models import Room
 from .utils import get_room_or_error, catch_client_error
+from .exceptions import ClientError
 
 
 ### WebSocket handling ###
@@ -91,6 +92,9 @@ def chat_leave(message):
 @channel_session_user
 @catch_client_error
 def chat_send(message):
+    # Check that the user in the room
+    if message['room'] not in message.channel_session['rooms']:
+        raise ClientError("ROOM_ACCESS_DENIED")
     # Find the room they're sending to, check perms
     room = get_room_or_error(message["room"], message.user)
     # Send the message along
